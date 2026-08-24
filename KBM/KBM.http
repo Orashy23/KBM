@@ -1,0 +1,6 @@
+@KBM_HostAddress = http://localhost:5214
+
+GET {{KBM_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
