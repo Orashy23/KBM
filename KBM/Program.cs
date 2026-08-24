@@ -10,14 +10,26 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
+using Application.Features.Department.Services;
+using Application.Features.DepartmentFunction.Services;
+using Application.Features.Function.Services;
+using Application.Features.Industry.Services;
+using Application.Features.Lesson.Services;
+using Application.Services.JWT;
+using Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. DbContext
+// DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Register Services in DI
+// DI for Feature & Auth Services
 builder.Services.AddScoped<Department_Service>();
 builder.Services.AddScoped<Function_Service>();
 builder.Services.AddScoped<Industry_Service>();
@@ -26,7 +38,7 @@ builder.Services.AddScoped<DepartmentFunction_Service>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
 
-// 3. Configure JWT Authentication
+// JWT Authentication Configuration
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing from appsettings.json");
 builder.Services.AddAuthentication(options =>
 {
@@ -51,7 +63,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// 4. Configure Swagger to input Bearer Token
+// Swagger with JWT Support
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "KBM API", Version = "v1" });
@@ -89,7 +101,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// IMPORTANT: Authentication MUST come before Authorization
+// Execution Order: Authentication MUST come before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
