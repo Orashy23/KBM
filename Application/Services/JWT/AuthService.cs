@@ -1,51 +1,49 @@
-﻿using Application.DTOs;
-using Application.Services.JWT;
-using Domains.Entities;
+﻿using Application.Services.JWT.DTOs;
+using Domain.Entities;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Services.JWT
+namespace Application.Services.JWT;
+
+public class AuthService
 {
-    public class AuthService
+    private readonly AppDbContext _context;
+    private readonly TokenService _tokenService;
+
+    public AuthService(AppDbContext context, TokenService tokenService)
     {
-        private readonly ApplicationDBContext _context;
-        private readonly TokenService _tokenService;
+        _context = context;
+        _tokenService = tokenService;
+    }
 
-        public AuthService(ApplicationDBContext context, TokenService tokenService)
+    public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
+    {
+        if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
+            throw new InvalidOperationException("Username already exists.");
+
+        var user = new User
         {
-            _context = context;
-            _tokenService = tokenService;
-        }
+            Username = dto.Username,
+            Email = dto.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Role = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role,
+            CreatedDate = DateTime.UtcNow
+        };
 
-        public async Task<string?> Register(RegisterDTO dto)
-        {
-            var exists = await _context.Users.AnyAsync(u => u.Username == dto.username);
-            if (exists) return null;
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
 
-            var user = new ApplicationUser
-            {
-                Id = Guid.NewGuid(),
-                Username = dto.username,
-                Email = dto.email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.password),
-                Role = "User"
-            };
+        var token = _tokenService.GenerateJwtToken(user);
+        return new AuthResponseDto { Token = token, Username = user.Username, Role = user.Role };
+    }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+    public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            throw new UnauthorizedAccessException("Invalid username or password.");
 
-            return _tokenService.GenerateToken(user);
-        }
-
-        public async Task<string?> Login(LoginDTO dto)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.username);
-            if (user == null) return null;
-
-            var valid = BCrypt.Net.BCrypt.Verify(dto.password, user.PasswordHash);
-            if (!valid) return null;
-
-            return _tokenService.GenerateToken(user);
-        }
+        var token = _tokenService.GenerateJwtToken(user);
+        return new AuthResponseDto { Token = token, Username = user.Username, Role = user.Role };
     }
 }
