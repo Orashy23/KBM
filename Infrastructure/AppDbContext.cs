@@ -14,7 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Industry> Industries { get; set; }
     public DbSet<Lesson> Lessons { get; set; }
     public DbSet<DepartmentFunction> DepartmentFunctions { get; set; }
-    public DbSet<User> Users { get; set; } // <--- ADD THIS LINE
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

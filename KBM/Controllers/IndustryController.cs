@@ -1,11 +1,13 @@
 using Application.Features.Industry.DTOs;
 using Application.Features.Industry.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KBM.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class IndustryController : ControllerBase
 {
     private readonly IndustryService _service;

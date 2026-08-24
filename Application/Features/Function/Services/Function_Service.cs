@@ -1,5 +1,6 @@
-﻿using Application.Features.Function.DTOs;
+using Application.Features.Function.DTOs;
 using Infrastructure;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using FunctionEntity = Domain.Entities.Function;
 
@@ -12,48 +13,23 @@ public class FunctionService
 
     public async Task<IEnumerable<FunctionDto>> GetAllAsync() =>
         await _context.Functions
-            .Select(f => new FunctionDto
-            {
-                FunctionID = f.FunctionID,
-                FunctionName = f.FunctionName,
-                CreatedDate = f.CreatedDate,
-                UpdatedDate = f.UpdatedDate
-            })
+            .ProjectToType<FunctionDto>()
             .ToListAsync();
 
-    public async Task<FunctionDto?> GetByIdAsync(int id)
-    {
-        var function = await _context.Functions.FindAsync(id);
-        if (function == null) return null;
-
-        return new FunctionDto
-        {
-            FunctionID = function.FunctionID,
-            FunctionName = function.FunctionName,
-            CreatedDate = function.CreatedDate,
-            UpdatedDate = function.UpdatedDate
-        };
-    }
+    public async Task<FunctionDto?> GetByIdAsync(int id) =>
+        await _context.Functions
+            .Where(f => f.FunctionID == id)
+            .ProjectToType<FunctionDto>()
+            .FirstOrDefaultAsync();
 
     public async Task<FunctionDto> CreateAsync(CreateFunctionDto dto)
     {
-        var function = new FunctionEntity
-        {
-            FunctionName = dto.FunctionName,
-            CreatedDate = DateTime.UtcNow,
-            UpdatedDate = DateTime.UtcNow
-        };
+        var function = dto.Adapt<FunctionEntity>();
 
         _context.Functions.Add(function);
         await _context.SaveChangesAsync();
 
-        return new FunctionDto
-        {
-            FunctionID = function.FunctionID,
-            FunctionName = function.FunctionName,
-            CreatedDate = function.CreatedDate,
-            UpdatedDate = function.UpdatedDate
-        };
+        return function.Adapt<FunctionDto>();
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateFunctionDto dto)
@@ -61,7 +37,7 @@ public class FunctionService
         var function = await _context.Functions.FindAsync(id);
         if (function == null) return false;
 
-        function.FunctionName = dto.FunctionName;
+        dto.Adapt(function);
         function.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

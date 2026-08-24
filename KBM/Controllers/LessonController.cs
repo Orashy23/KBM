@@ -1,11 +1,13 @@
 using Application.Features.Lesson.DTOs;
 using Application.Features.Lesson.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KBM.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LessonController : ControllerBase
 {
     private readonly LessonService _service;

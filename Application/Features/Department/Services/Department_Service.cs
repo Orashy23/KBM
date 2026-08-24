@@ -1,5 +1,6 @@
-﻿using Application.Features.Department.DTOs;
+using Application.Features.Department.DTOs;
 using Infrastructure;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using DepartmentEntity = Domain.Entities.Department;
 
@@ -12,48 +13,23 @@ public class DepartmentService
 
     public async Task<IEnumerable<DepartmentDto>> GetAllAsync() =>
         await _context.Departments
-            .Select(d => new DepartmentDto
-            {
-                DepartmentID = d.DepartmentID,
-                DepartmentName = d.DepartmentName,
-                CreatedDate = d.CreatedDate,
-                UpdatedDate = d.UpdatedDate
-            })
+            .ProjectToType<DepartmentDto>()
             .ToListAsync();
 
-    public async Task<DepartmentDto?> GetByIdAsync(int id)
-    {
-        var department = await _context.Departments.FindAsync(id);
-        if (department == null) return null;
-
-        return new DepartmentDto
-        {
-            DepartmentID = department.DepartmentID,
-            DepartmentName = department.DepartmentName,
-            CreatedDate = department.CreatedDate,
-            UpdatedDate = department.UpdatedDate
-        };
-    }
+    public async Task<DepartmentDto?> GetByIdAsync(int id) =>
+        await _context.Departments
+            .Where(d => d.DepartmentID == id)
+            .ProjectToType<DepartmentDto>()
+            .FirstOrDefaultAsync();
 
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto dto)
     {
-        var department = new DepartmentEntity
-        {
-            DepartmentName = dto.DepartmentName,
-            CreatedDate = DateTime.UtcNow,
-            UpdatedDate = DateTime.UtcNow
-        };
+        var department = dto.Adapt<DepartmentEntity>();
 
         _context.Departments.Add(department);
         await _context.SaveChangesAsync();
 
-        return new DepartmentDto
-        {
-            DepartmentID = department.DepartmentID,
-            DepartmentName = department.DepartmentName,
-            CreatedDate = department.CreatedDate,
-            UpdatedDate = department.UpdatedDate
-        };
+        return department.Adapt<DepartmentDto>();
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateDepartmentDto dto)
@@ -61,7 +37,7 @@ public class DepartmentService
         var department = await _context.Departments.FindAsync(id);
         if (department == null) return false;
 
-        department.DepartmentName = dto.DepartmentName;
+        dto.Adapt(department);
         department.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

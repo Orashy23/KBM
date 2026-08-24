@@ -1,9 +1,6 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using static System.Reflection.Metadata.BlobBuilder;
-
-
 
 namespace Infrastructure.Configurations;
 

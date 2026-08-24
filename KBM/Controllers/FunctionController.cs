@@ -1,11 +1,13 @@
 using Application.Features.Function.DTOs;
 using Application.Features.Function.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KBM.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class FunctionController : ControllerBase
 {
     private readonly FunctionService _service;

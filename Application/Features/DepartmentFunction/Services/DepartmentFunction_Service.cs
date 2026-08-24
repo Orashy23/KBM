@@ -1,5 +1,6 @@
-﻿using Application.Features.DepartmentFunction.DTOs;
+using Application.Features.DepartmentFunction.DTOs;
 using Infrastructure;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using DepartmentFunctionEntity = Domain.Entities.DepartmentFunction;
 
@@ -10,25 +11,16 @@ public class DepartmentFunctionService
     private readonly AppDbContext _context;
     public DepartmentFunctionService(AppDbContext context) => _context = context;
 
-    public async Task<IEnumerable<DepartmentFunctionDto>> GetAllAsync()
-    {
-        var links = await _context.DepartmentFunctions
-            .Include(df => df.Department)
-            .Include(df => df.Function)
+    public async Task<IEnumerable<DepartmentFunctionDto>> GetAllAsync() =>
+        await _context.DepartmentFunctions
+            .ProjectToType<DepartmentFunctionDto>()
             .ToListAsync();
 
-        return links.Select(ToDto);
-    }
-
-    public async Task<DepartmentFunctionDto?> GetByIdAsync(int departmentId, int functionId)
-    {
-        var link = await _context.DepartmentFunctions
-            .Include(df => df.Department)
-            .Include(df => df.Function)
-            .FirstOrDefaultAsync(df => df.DepartmentID == departmentId && df.FunctionID == functionId);
-
-        return link is null ? null : ToDto(link);
-    }
+    public async Task<DepartmentFunctionDto?> GetByIdAsync(int departmentId, int functionId) =>
+        await _context.DepartmentFunctions
+            .Where(df => df.DepartmentID == departmentId && df.FunctionID == functionId)
+            .ProjectToType<DepartmentFunctionDto>()
+            .FirstOrDefaultAsync();
 
     public async Task<DepartmentFunctionDto?> CreateAsync(CreateDepartmentFunctionDto dto)
     {
@@ -40,15 +32,12 @@ public class DepartmentFunctionService
             .AnyAsync(df => df.DepartmentID == dto.DepartmentID && df.FunctionID == dto.FunctionID);
         if (alreadyLinked) return null;
 
-        var link = new DepartmentFunctionEntity
-        {
-            DepartmentID = dto.DepartmentID,
-            FunctionID = dto.FunctionID
-        };
+        var link = dto.Adapt<DepartmentFunctionEntity>();
 
         _context.DepartmentFunctions.Add(link);
         await _context.SaveChangesAsync();
 
+        // Re-read so the related names are populated on the returned DTO.
         return await GetByIdAsync(link.DepartmentID, link.FunctionID);
     }
 
@@ -62,12 +51,4 @@ public class DepartmentFunctionService
         await _context.SaveChangesAsync();
         return true;
     }
-
-    private static DepartmentFunctionDto ToDto(DepartmentFunctionEntity df) => new()
-    {
-        DepartmentID = df.DepartmentID,
-        FunctionID = df.FunctionID,
-        DepartmentName = df.Department?.DepartmentName,
-        FunctionName = df.Function?.FunctionName
-    };
 }

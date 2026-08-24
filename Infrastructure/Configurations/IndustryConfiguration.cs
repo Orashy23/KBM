@@ -20,6 +20,6 @@ public class IndustryConfiguration : IEntityTypeConfiguration<Industry>
                .IsRequired();
 
         builder.Property(i => i.ModifiedDate)
-               .IsRequired(false);
+               .IsRequired();
     }
 }

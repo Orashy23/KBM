@@ -1,5 +1,6 @@
-﻿using Application.Features.Lesson.DTOs;
+using Application.Features.Lesson.DTOs;
 using Infrastructure;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using LessonEntity = Domain.Entities.Lesson;
 
@@ -10,51 +11,31 @@ public class LessonService
     private readonly AppDbContext _context;
     public LessonService(AppDbContext context) => _context = context;
 
-    public async Task<IEnumerable<LessonDto>> GetAllAsync()
-    {
-        var lessons = await _context.Lessons
-            .Include(l => l.Function)
-            .Include(l => l.Department)
-            .Include(l => l.Industry)
+    // ProjectToType flattens Function/Department/Industry names into the DTO as
+    // LEFT JOINs, so these reads are a single SQL query with no Include needed.
+    public async Task<IEnumerable<LessonDto>> GetAllAsync() =>
+        await _context.Lessons
+            .ProjectToType<LessonDto>()
             .ToListAsync();
 
-        return lessons.Select(ToDto);
-    }
-
-    public async Task<LessonDto?> GetByIdAsync(int id)
-    {
-        var lesson = await _context.Lessons
-            .Include(l => l.Function)
-            .Include(l => l.Department)
-            .Include(l => l.Industry)
-            .FirstOrDefaultAsync(l => l.LessonID == id);
-
-        return lesson is null ? null : ToDto(lesson);
-    }
+    public async Task<LessonDto?> GetByIdAsync(int id) =>
+        await _context.Lessons
+            .Where(l => l.LessonID == id)
+            .ProjectToType<LessonDto>()
+            .FirstOrDefaultAsync();
 
     public async Task<LessonDto?> CreateAsync(CreateLessonDto dto)
     {
         if (!await ForeignKeysExistAsync(dto.DepartmentID, dto.FunctionID, dto.IndustryID))
             return null;
 
-        var lesson = new LessonEntity
-        {
-            ProjectName = dto.ProjectName,
-            TitleName = dto.TitleName,
-            Description = dto.Description,
-            ValueProposition = dto.ValueProposition,
-            TargetAudience = dto.TargetAudience,
-            PersonToContact = dto.PersonToContact,
-            ImageURL = dto.ImageURL,
-            DepartmentID = dto.DepartmentID,
-            FunctionID = dto.FunctionID,
-            IndustryID = dto.IndustryID,
-            ModifiedDate = DateTime.UtcNow
-        };
+        var lesson = dto.Adapt<LessonEntity>();
+        lesson.ModifiedDate = DateTime.UtcNow;
 
         _context.Lessons.Add(lesson);
         await _context.SaveChangesAsync();
 
+        // Re-read so the related names are populated on the returned DTO.
         return await GetByIdAsync(lesson.LessonID);
     }
 
@@ -67,16 +48,7 @@ public class LessonService
         if (!await ForeignKeysExistAsync(dto.DepartmentID, dto.FunctionID, dto.IndustryID))
             return null;
 
-        lesson.ProjectName = dto.ProjectName;
-        lesson.TitleName = dto.TitleName;
-        lesson.Description = dto.Description;
-        lesson.ValueProposition = dto.ValueProposition;
-        lesson.TargetAudience = dto.TargetAudience;
-        lesson.PersonToContact = dto.PersonToContact;
-        lesson.ImageURL = dto.ImageURL;
-        lesson.DepartmentID = dto.DepartmentID;
-        lesson.FunctionID = dto.FunctionID;
-        lesson.IndustryID = dto.IndustryID;
+        dto.Adapt(lesson);
         lesson.ModifiedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -97,23 +69,4 @@ public class LessonService
         await _context.Departments.AnyAsync(d => d.DepartmentID == departmentId) &&
         await _context.Functions.AnyAsync(f => f.FunctionID == functionId) &&
         await _context.Industries.AnyAsync(i => i.IndustryID == industryId);
-
-    private static LessonDto ToDto(LessonEntity l) => new()
-    {
-        LessonID = l.LessonID,
-        ProjectName = l.ProjectName,
-        TitleName = l.TitleName,
-        Description = l.Description,
-        ValueProposition = l.ValueProposition,
-        TargetAudience = l.TargetAudience,
-        PersonToContact = l.PersonToContact,
-        ImageURL = l.ImageURL,
-        FunctionID = l.FunctionID,
-        DepartmentID = l.DepartmentID,
-        IndustryID = l.IndustryID,
-        FunctionName = l.Function?.FunctionName,
-        DepartmentName = l.Department?.DepartmentName,
-        IndustryName = l.Industry?.IndustryName,
-        ModifiedDate = l.ModifiedDate
-    };
 }

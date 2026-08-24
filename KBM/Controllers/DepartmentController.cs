@@ -1,11 +1,13 @@
 using Application.Features.Department.DTOs;
 using Application.Features.Department.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KBM.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DepartmentController : ControllerBase
 {
     private readonly DepartmentService _service;

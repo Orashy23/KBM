@@ -20,19 +20,25 @@ public class LessonConfiguration : IEntityTypeConfiguration<Lesson>
                .IsRequired()
                .HasMaxLength(200);
 
+        // Optional detail fields — explicitly nullable so the columns allow NULL.
         builder.Property(l => l.Description)
+               .IsRequired(false)
                .HasMaxLength(500);
 
         builder.Property(l => l.ValueProposition)
+               .IsRequired(false)
                .HasMaxLength(500);
 
         builder.Property(l => l.TargetAudience)
+               .IsRequired(false)
                .HasMaxLength(250);
 
         builder.Property(l => l.PersonToContact)
+               .IsRequired(false)
                .HasMaxLength(150);
 
         builder.Property(l => l.ImageURL)
+               .IsRequired(false)
                .HasMaxLength(500);
 
 
