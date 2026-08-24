@@ -1,27 +1,24 @@
 ﻿using Domain.Entities;
-using Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
 
-    public DbSet<Department> Departments => Set<Department>();
-    public DbSet<Function> Functions => Set<Function>();
-    public DbSet<DepartmentFunction> DepartmentFunctions => Set<DepartmentFunction>();
-    public DbSet<Industry> Industries => Set<Industry>();
-    public DbSet<Lesson> Lessons => Set<Lesson>();
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Function> Functions { get; set; }
+    public DbSet<Industry> Industries { get; set; }
+    public DbSet<Lesson> Lessons { get; set; }
+    public DbSet<DepartmentFunction> DepartmentFunctions { get; set; }
+    public DbSet<User> Users { get; set; } // <--- ADD THIS LINE
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
-        modelBuilder.ApplyConfiguration(new FunctionConfiguration());
-        modelBuilder.ApplyConfiguration(new DepartmentFunctionConfiguration());
-        modelBuilder.ApplyConfiguration(new IndustryConfiguration());
-        modelBuilder.ApplyConfiguration(new LessonConfiguration());
     }
 }
