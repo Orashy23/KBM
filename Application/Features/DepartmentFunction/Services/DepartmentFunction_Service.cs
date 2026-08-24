@@ -1,0 +1,73 @@
+﻿using Application.Features.DepartmentFunction.DTOs;
+using Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using DepartmentFunctionEntity = Domain.Entities.DepartmentFunction;
+
+namespace Application.Features.DepartmentFunction.Services;
+
+public class DepartmentFunctionService
+{
+    private readonly AppDbContext _context;
+    public DepartmentFunctionService(AppDbContext context) => _context = context;
+
+    public async Task<IEnumerable<DepartmentFunctionDto>> GetAllAsync()
+    {
+        var links = await _context.DepartmentFunctions
+            .Include(df => df.Department)
+            .Include(df => df.Function)
+            .ToListAsync();
+
+        return links.Select(ToDto);
+    }
+
+    public async Task<DepartmentFunctionDto?> GetByIdAsync(int departmentId, int functionId)
+    {
+        var link = await _context.DepartmentFunctions
+            .Include(df => df.Department)
+            .Include(df => df.Function)
+            .FirstOrDefaultAsync(df => df.DepartmentID == departmentId && df.FunctionID == functionId);
+
+        return link is null ? null : ToDto(link);
+    }
+
+    public async Task<DepartmentFunctionDto?> CreateAsync(CreateDepartmentFunctionDto dto)
+    {
+        var departmentExists = await _context.Departments.AnyAsync(d => d.DepartmentID == dto.DepartmentID);
+        var functionExists = await _context.Functions.AnyAsync(f => f.FunctionID == dto.FunctionID);
+        if (!departmentExists || !functionExists) return null;
+
+        var alreadyLinked = await _context.DepartmentFunctions
+            .AnyAsync(df => df.DepartmentID == dto.DepartmentID && df.FunctionID == dto.FunctionID);
+        if (alreadyLinked) return null;
+
+        var link = new DepartmentFunctionEntity
+        {
+            DepartmentID = dto.DepartmentID,
+            FunctionID = dto.FunctionID
+        };
+
+        _context.DepartmentFunctions.Add(link);
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(link.DepartmentID, link.FunctionID);
+    }
+
+    public async Task<bool> DeleteAsync(int departmentId, int functionId)
+    {
+        var link = await _context.DepartmentFunctions
+            .FirstOrDefaultAsync(df => df.DepartmentID == departmentId && df.FunctionID == functionId);
+        if (link == null) return false;
+
+        _context.DepartmentFunctions.Remove(link);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    private static DepartmentFunctionDto ToDto(DepartmentFunctionEntity df) => new()
+    {
+        DepartmentID = df.DepartmentID,
+        FunctionID = df.FunctionID,
+        DepartmentName = df.Department?.DepartmentName,
+        FunctionName = df.Function?.FunctionName
+    };
+}

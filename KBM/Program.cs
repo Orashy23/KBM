@@ -1,15 +1,29 @@
+using Application.Features.Department.Services;
+using Application.Features.DepartmentFunction.Services;
+using Application.Features.Function.Services;
+using Application.Features.Industry.Services;
+using Application.Features.Lesson.Services;
+using Infrastructure;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<DepartmentService>();
+builder.Services.AddScoped<FunctionService>();
+builder.Services.AddScoped<DepartmentFunctionService>();
+builder.Services.AddScoped<IndustryService>();
+builder.Services.AddScoped<LessonService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -17,9 +31,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

@@ -1,33 +1,38 @@
+using Application.Features.Function.DTOs;
+using Application.Features.Function.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KBM.Controllers
+namespace KBM.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class FunctionController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    private readonly FunctionService _service;
+    public FunctionController(FunctionService service) => _service = service;
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Get(int id)
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
+        var result = await _service.GetByIdAsync(id);
+        return result is null ? NotFound() : Ok(result);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateFunctionDto dto)
+    {
+        var created = await _service.CreateAsync(dto);
+        return CreatedAtAction(nameof(Get), new { id = created.FunctionID }, created);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, UpdateFunctionDto dto) =>
+        await _service.UpdateAsync(id, dto) ? NoContent() : NotFound();
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id) =>
+        await _service.DeleteAsync(id) ? NoContent() : NotFound();
 }

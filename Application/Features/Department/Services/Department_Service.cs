@@ -1,45 +1,69 @@
-﻿// Application/Features/Department/Services/Department_Service.cs
-using Application.Features.Department.DTOs;
-using Domain.Entities;
+﻿using Application.Features.Department.DTOs;
 using Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using DepartmentEntity = Domain.Entities.Department;
 
-public class Department_Service
+namespace Application.Features.Department.Services;
+
+public class DepartmentService
 {
     private readonly AppDbContext _context;
-    public Department_Service(AppDbContext context) => _context = context;
+    public DepartmentService(AppDbContext context) => _context = context;
 
-    public async Task<IEnumerable<Department_DTO>> GetAllAsync() =>
-        await _context.Department
-            .Select(d => new Department_DTO { Id = d.Id, Name = d.Name, CreatedDate = d.CreatedDate, ModifiedDate = d.ModifiedDate })
+    public async Task<IEnumerable<DepartmentDto>> GetAllAsync() =>
+        await _context.Departments
+            .Select(d => new DepartmentDto
+            {
+                DepartmentID = d.DepartmentID,
+                DepartmentName = d.DepartmentName,
+                CreatedDate = d.CreatedDate,
+                UpdatedDate = d.UpdatedDate
+            })
             .ToListAsync();
 
-    public async Task<DepartmentDTO?> GetByIdAsync(int id)
+    public async Task<DepartmentDto?> GetByIdAsync(int id)
     {
-        var d = await _context.Departments.FindAsync(id);
-        return d == null ? null : new DepartmentDTO { Id = d.Id, Name = d.Name, CreatedDate = d.CreatedDate, ModifiedDate = d.ModifiedDate };
+        var department = await _context.Departments.FindAsync(id);
+        if (department == null) return null;
+
+        return new DepartmentDto
+        {
+            DepartmentID = department.DepartmentID,
+            DepartmentName = department.DepartmentName,
+            CreatedDate = department.CreatedDate,
+            UpdatedDate = department.UpdatedDate
+        };
     }
 
-    public async Task<DepartmentDTO> CreateAsync(DepartmentDTO dto)
+    public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto dto)
     {
-        var department = new Department
+        var department = new DepartmentEntity
         {
-            Name = dto.Name,
+            DepartmentName = dto.DepartmentName,
             CreatedDate = DateTime.UtcNow,
-            ModifiedDate = DateTime.UtcNow
+            UpdatedDate = DateTime.UtcNow
         };
+
         _context.Departments.Add(department);
         await _context.SaveChangesAsync();
-        dto.Id = department.Id;
-        return dto;
+
+        return new DepartmentDto
+        {
+            DepartmentID = department.DepartmentID,
+            DepartmentName = department.DepartmentName,
+            CreatedDate = department.CreatedDate,
+            UpdatedDate = department.UpdatedDate
+        };
     }
 
-    public async Task<bool> UpdateAsync(int id, DepartmentDTO dto)
+    public async Task<bool> UpdateAsync(int id, UpdateDepartmentDto dto)
     {
         var department = await _context.Departments.FindAsync(id);
         if (department == null) return false;
 
-        department.Name = dto.Name;
-        department.ModifiedDate = DateTime.UtcNow;
+        department.DepartmentName = dto.DepartmentName;
+        department.UpdatedDate = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
         return true;
     }

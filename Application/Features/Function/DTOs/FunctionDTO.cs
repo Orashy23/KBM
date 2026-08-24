@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Application.Features.Function.DTOs;
 
-namespace Application.Features.Function.DTOs
+public class FunctionDto
 {
-    public class FunctionDTO
-    {
-        public string FunctionName { get; set; }
+    public int FunctionID { get; set; }
+    public string FunctionName { get; set; } = string.Empty;
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
+}
 
+public class CreateFunctionDto
+{
+    public string FunctionName { get; set; } = string.Empty;
+}
 
-
-
-    }
+public class UpdateFunctionDto
+{
+    public string FunctionName { get; set; } = string.Empty;
 }

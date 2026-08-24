@@ -1,12 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Entities;
+using Infrastructure.Configurations;
+using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure
+namespace Infrastructure;
+
+public class AppDbContext : DbContext
 {
-    public class AppDbContext
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<Function> Functions => Set<Function>();
+    public DbSet<DepartmentFunction> DepartmentFunctions => Set<DepartmentFunction>();
+    public DbSet<Industry> Industries => Set<Industry>();
+    public DbSet<Lesson> Lessons => Set<Lesson>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
+        modelBuilder.ApplyConfiguration(new FunctionConfiguration());
+        modelBuilder.ApplyConfiguration(new DepartmentFunctionConfiguration());
+        modelBuilder.ApplyConfiguration(new IndustryConfiguration());
+        modelBuilder.ApplyConfiguration(new LessonConfiguration());
     }
 }

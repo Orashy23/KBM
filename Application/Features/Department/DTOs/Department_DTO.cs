@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Application.Features.Department.DTOs;
 
-namespace Application.Features.Department.DTOs
+public class DepartmentDto
 {
-    public class Department_DTO
-    {
+    public int DepartmentID { get; set; }
+    public string DepartmentName { get; set; } = string.Empty;
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
+}
 
-        public string DepartmentName { get; set; }
+public class CreateDepartmentDto
+{
+    public string DepartmentName { get; set; } = string.Empty;
+}
 
-
-
-
-
-    }
+public class UpdateDepartmentDto
+{
+    public string DepartmentName { get; set; } = string.Empty;
 }

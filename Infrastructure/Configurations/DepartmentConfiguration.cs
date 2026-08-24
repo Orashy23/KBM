@@ -1,23 +1,20 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using static System.Reflection.Metadata.BlobBuilder;
 
+namespace Infrastructure.Configurations;
 
-    public class DepartmentConfiguration
+public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
+{
+    public void Configure(EntityTypeBuilder<Department> builder)
     {
-
-        public void Configure(EntityTypeBuilder<Department> builder)
-        { 
-    
         builder.HasKey(d => d.DepartmentID);
+
         builder.Property(d => d.DepartmentName)
-            .IsRequired()
-            .HasMaxLength(100);
+               .IsRequired()
+               .HasMaxLength(100);
 
-
-        }
-
-
+        builder.Property(d => d.CreatedDate).IsRequired();
+        builder.Property(d => d.UpdatedDate).IsRequired();
     }
-
+}

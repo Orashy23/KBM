@@ -2,21 +2,19 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Configuration
+namespace Infrastructure.Configurations;
+
+public class FunctionConfiguration : IEntityTypeConfiguration<Function>
 {
-    public class FunctionConfiguration
+    public void Configure(EntityTypeBuilder<Function> builder)
     {
-        public void Configure(EntityTypeBuilder<Function> builder)
-        {
+        builder.HasKey(f => f.FunctionID);
 
-            builder.HasKey(d => d.FunctionID);
-            builder.Property(d => d.FunctionName)
-                .IsRequired()
-                .HasMaxLength(100);
+        builder.Property(f => f.FunctionName)
+               .IsRequired()
+               .HasMaxLength(100);
 
-
-        }
-
-
+        builder.Property(f => f.CreatedDate).IsRequired();
+        builder.Property(f => f.UpdatedDate).IsRequired();
     }
 }

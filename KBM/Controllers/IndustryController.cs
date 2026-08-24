@@ -1,6 +1,38 @@
+using Application.Features.Industry.DTOs;
+using Application.Features.Industry.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KBM.Controllers
+namespace KBM.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class IndustryController : ControllerBase
 {
-    
+    private readonly IndustryService _service;
+    public IndustryController(IndustryService service) => _service = service;
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var result = await _service.GetByIdAsync(id);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateIndustryDto dto)
+    {
+        var created = await _service.CreateAsync(dto);
+        return CreatedAtAction(nameof(Get), new { id = created.IndustryID }, created);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, UpdateIndustryDto dto) =>
+        await _service.UpdateAsync(id, dto) ? NoContent() : NotFound();
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id) =>
+        await _service.DeleteAsync(id) ? NoContent() : NotFound();
 }

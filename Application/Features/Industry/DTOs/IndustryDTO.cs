@@ -1,15 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Application.Features.Industry.DTOs;
 
-namespace Application.Features.Industry.DTOs
+public class IndustryDto
 {
-    internal class IndustryDTO
-    {
-        public string IndustryName { get; set; }
+    public int IndustryID { get; set; }
+    public string IndustryName { get; set; } = string.Empty;
+    public DateTime CreatedDate { get; set; }
+    public DateTime ModifiedDate { get; set; }
+}
 
+public class CreateIndustryDto
+{
+    public string IndustryName { get; set; } = string.Empty;
+}
 
-    }
+public class UpdateIndustryDto
+{
+    public string IndustryName { get; set; } = string.Empty;
 }
